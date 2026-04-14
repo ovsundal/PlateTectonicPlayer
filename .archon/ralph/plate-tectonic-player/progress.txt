@@ -1,0 +1,43 @@
+## Codebase Patterns
+
+### Git Worktree Layout
+- **Where**: root of repo
+- **Pattern**: The project git repo is at `C:/Users/ove.sundal/WebstormProjects/PlateTectonicPlayer/`. The archon worktree (`archon/thread-ae2b8fff`) is a git worktree of that same repo. All source files must be created in the WORKTREE path (`.archon/workspaces/.../worktrees/archon/thread-ae2b8fff/`), NOT in WebstormProjects directly, so they are on the correct branch for commits.
+- **Example**: `git add package.json` from the worktree path stages to `archon/thread-ae2b8fff`
+
+### npm Commands
+- **Where**: project root
+- **Pattern**: Run `npx tsc --noEmit`, `npx eslint src`, `npx vite build` from the WORKTREE path (cd first). Shell CWD resets between Bash commands so always use `cd /path && command` in a single command.
+
+---
+
+## 2026-04-14 — US-001: Scaffold Vite + React + TypeScript project
+
+**Status**: PASSED
+**Files changed**:
+- `package.json` — created with scripts: dev, build, preview, typecheck, lint
+- `tsconfig.json` — project references to tsconfig.app.json and tsconfig.node.json
+- `tsconfig.app.json` — strict mode, jsx: react-jsx, bundler moduleResolution
+- `tsconfig.node.json` — for vite.config.ts
+- `vite.config.ts` — @vitejs/plugin-react configured
+- `index.html` — references /src/main.tsx
+- `src/main.tsx` — renders <App /> into #root
+- `src/App.tsx` — placeholder div component
+- `eslint.config.js` — TypeScript + react-hooks + react-refresh rules
+
+**Acceptance criteria verified**:
+- [x] package.json exists with scripts: dev, build, preview, typecheck, lint
+- [x] tsconfig.json exists with strict mode enabled and JSX set to react-jsx
+- [x] vite.config.ts exists with @vitejs/plugin-react configured
+- [x] index.html exists referencing src/main.tsx
+- [x] src/main.tsx renders <App /> into #root
+- [x] src/App.tsx exists and renders a placeholder <div>
+- [x] `npx tsc --noEmit` passes with zero errors
+- [x] `npx vite build` completes without errors
+
+**Learnings**:
+- Files must go in the WORKTREE path, not in C:/Users/ove.sundal/WebstormProjects/PlateTectonicPlayer/ (which is on branch main)
+- Shell CWD resets between Bash commands — always `cd /path && command`
+- The worktree `.git` file points to `WebstormProjects/PlateTectonicPlayer/.git/worktrees/thread-ae2b8fff` confirming they share one git repo
+
+---
