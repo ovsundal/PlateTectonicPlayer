@@ -16,8 +16,8 @@
       "technicalNotes": "Run: npm install @deck.gl/core @deck.gl/layers @deck.gl/geo-layers @deck.gl/react. deck.gl ships its own TypeScript declarations; no @types/ packages are needed. Project uses ES modules (\"type\": \"module\" in package.json) and Vite 6 — no bundler config changes required.",
       "dependsOn": [],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Files: package.json, package-lock.json. 130 packages added, 0 vulnerabilities."
     },
     {
       "id": "US-002",
@@ -35,8 +35,8 @@
       "technicalNotes": "Create src/components/ directory. Import pattern: `import DeckGL from '@deck.gl/react'`, `import { GlobeView } from '@deck.gl/core'`, `import { GeoJsonLayer } from '@deck.gl/layers'`. Pass `views={new GlobeView()}` to DeckGL. Use `initialViewState` prop for the starting camera. Set `controller={true}` to enable mouse orbit/zoom. The DeckGL component manages its own canvas; no separate canvas element needed. TypeScript strict mode is on (tsconfig.app.json) — type all props explicitly.",
       "dependsOn": ["US-001"],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Files: src/components/Globe.tsx. No type errors. DeckGL with GlobeView, GeoJsonLayer with Natural Earth CDN URL."
     },
     {
       "id": "US-003",
@@ -53,8 +53,8 @@
       "technicalNotes": "Update src/App.tsx (currently at src/App.tsx:1-5 — single div with text). Replace content with <Globe /> import. Add global CSS reset either by editing src/index.css (if it exists) or importing a new one from main.tsx. Vite scaffolds typically include an index.css — check and add: `*, html, body { margin: 0; padding: 0; box-sizing: border-box; } #root { width: 100vw; height: 100vh; overflow: hidden; }`. The main.tsx entry point (src/main.tsx) does not need changes.",
       "dependsOn": ["US-002"],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Files: src/App.tsx, src/index.css. Created index.css with global reset, imported from App.tsx. Both typecheck and lint pass with 0 errors."
     }
   ]
 }

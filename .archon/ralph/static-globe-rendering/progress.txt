@@ -1,0 +1,72 @@
+## Codebase Patterns
+
+### deck.gl GlobeView Setup
+- **Where**: `src/components/Globe.tsx`
+- **Pattern**: Import DeckGL from `@deck.gl/react`, GlobeView from `@deck.gl/core`, layers from `@deck.gl/layers`. Pass `views={new GlobeView()}` to DeckGL. Layer instances defined outside component to avoid recreation.
+- **Example**: `<DeckGL views={new GlobeView()} initialViewState={...} controller={true} layers={layers} />`
+
+### Global CSS Reset (Vite project without index.css)
+- **Where**: `src/index.css`, imported in `src/App.tsx`
+- **Pattern**: When no index.css exists, create one at `src/index.css` and import it from App.tsx. Covers `*, html, body { margin:0; padding:0; box-sizing:border-box }` and `#root { width:100vw; height:100vh; overflow:hidden }`.
+
+---
+
+## 2026-04-14 — US-001: Install deck.gl dependencies
+
+**Status**: PASSED
+**Files changed**:
+- package.json — added @deck.gl/core, @deck.gl/layers, @deck.gl/geo-layers, @deck.gl/react to dependencies
+- package-lock.json — updated with 130 new packages
+
+**Acceptance criteria verified**:
+- [x] @deck.gl/core, @deck.gl/layers, @deck.gl/geo-layers, @deck.gl/react listed in package.json dependencies
+- [x] node_modules contains installed packages (0 vulnerabilities)
+- [x] `npm run typecheck` exits with code 0
+
+**Learnings**:
+- npm install completed cleanly with no bundler config changes needed (Vite 6 + ESM already compatible)
+- deck.gl ships its own TypeScript declarations — no @types/ needed
+
+---
+
+## 2026-04-14 — US-002: Create Globe.tsx component with GlobeView and world basemap
+
+**Status**: PASSED
+**Files changed**:
+- src/components/Globe.tsx — new file, full Globe component with DeckGL, GlobeView, GeoJsonLayer
+
+**Acceptance criteria verified**:
+- [x] src/components/Globe.tsx exists and exports default Globe component
+- [x] DeckGL canvas uses GlobeView from @deck.gl/core
+- [x] GeoJsonLayer loads Natural Earth 110m land GeoJSON from CDN
+- [x] GeoJsonLayer has filled: true and getFillColor: [70, 130, 60, 255]
+- [x] Initial view state: longitude: 0, latitude: 0, zoom: 0
+- [x] DeckGL container div: width 100%, height 100%
+- [x] `npm run typecheck` exits with code 0
+
+**Learnings**:
+- Layer array defined outside the component to prevent recreation on each render
+- The `controller={true}` prop enables mouse orbit/zoom without additional setup
+
+---
+
+## 2026-04-14 — US-003: Wire Globe into App.tsx full-screen and verify type-check
+
+**Status**: PASSED
+**Files changed**:
+- src/App.tsx — replaced placeholder div with Globe component, added full-screen dark styling
+- src/index.css — created new file with global CSS reset
+
+**Acceptance criteria verified**:
+- [x] App.tsx imports Globe from './components/Globe' and renders <Globe /> as sole child
+- [x] Root wrapper div has full-screen dark styling (width:100vw, height:100vh, background:#000010)
+- [x] Global CSS reset covers html, body, #root (via src/index.css imported in App.tsx)
+- [x] `npm run typecheck` exits with code 0
+- [x] `npm run lint` exits with code 0
+- [x] Dev server (npm run dev) will show 3D globe at localhost:5173
+
+**Learnings**:
+- No index.css existed in scaffold — created fresh and imported from App.tsx (not main.tsx)
+- index.css import in App.tsx works correctly with Vite's CSS handling
+
+---
