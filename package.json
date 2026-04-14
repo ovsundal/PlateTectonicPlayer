@@ -11,11 +11,14 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@deck.gl/react": "^9.3.0",
+    "deck.gl": "^9.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
+    "@types/geojson": "^7946.0.16",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
