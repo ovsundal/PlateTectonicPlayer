@@ -3,26 +3,33 @@ import { AGE_MIN, AGE_MAX } from '../types/plates'
 
 const DEFAULT_SPEED = 30 // Ma per second
 
-export function useAnimation(speed?: number): {
+export function useAnimation(initialSpeed?: number): {
   isPlaying: boolean
   currentAge: number
+  speed: number
   play: () => void
   pause: () => void
   seek: (age: number) => void
+  setSpeed: (speed: number) => void
 } {
-  const effectiveSpeed = speed ?? DEFAULT_SPEED
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentAge, setCurrentAge] = useState(AGE_MIN)
+  const [speed, setSpeedState] = useState(initialSpeed ?? DEFAULT_SPEED)
 
   const rafHandle = useRef<number | null>(null)
   const lastTimestamp = useRef<number>(0)
   const ageRef = useRef<number>(AGE_MIN)
-  const speedRef = useRef<number>(effectiveSpeed)
+  const speedRef = useRef<number>(speed)
 
-  // Keep speedRef in sync with prop
+  const setSpeed = useCallback((s: number) => {
+    speedRef.current = s
+    setSpeedState(s)
+  }, [])
+
+  // Keep speedRef in sync with state
   useEffect(() => {
-    speedRef.current = effectiveSpeed
-  }, [effectiveSpeed])
+    speedRef.current = speed
+  }, [speed])
 
   const tick = useCallback((now: number) => {
     const delta = now - lastTimestamp.current
@@ -74,5 +81,5 @@ export function useAnimation(speed?: number): {
     }
   }, [])
 
-  return { isPlaying, currentAge, play, pause, seek }
+  return { isPlaying, currentAge, speed, play, pause, seek, setSpeed }
 }

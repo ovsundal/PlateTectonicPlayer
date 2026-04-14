@@ -1,17 +1,27 @@
 interface TimelineControlsProps {
   isPlaying: boolean
   currentAge: number
+  speed: number
   onPlay: () => void
   onPause: () => void
   onSeek: (age: number) => void
+  onSetSpeed: (speed: number) => void
 }
+
+const SPEED_OPTIONS = [
+  { label: '10 Ma/s', value: 10 },
+  { label: '30 Ma/s', value: 30 },
+  { label: '100 Ma/s', value: 100 },
+]
 
 export function TimelineControls({
   isPlaying,
   currentAge,
+  speed,
   onPlay,
   onPause,
   onSeek,
+  onSetSpeed,
 }: TimelineControlsProps) {
   return (
     <div
@@ -66,6 +76,26 @@ export function TimelineControls({
       >
         {Math.round(currentAge)} Ma
       </span>
+
+      <select
+        value={speed}
+        onChange={(e) => onSetSpeed(Number(e.target.value))}
+        style={{
+          padding: '6px 10px',
+          background: '#1a2744',
+          color: '#fff',
+          border: '1px solid #2a6fd4',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+        }}
+      >
+        {SPEED_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }
