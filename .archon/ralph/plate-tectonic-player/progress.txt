@@ -9,6 +9,10 @@
 - **Where**: project root
 - **Pattern**: Run `npx tsc --noEmit`, `npx eslint src`, `npx vite build` from the WORKTREE path (cd first). Shell CWD resets between Bash commands so always use `cd /path && command` in a single command.
 
+### deck.gl GlobeView in v9
+- **Where**: `src/components/Globe.tsx`
+- **Pattern**: In deck.gl v9, `GlobeView` is exported as `_GlobeView` (experimental). Import as `import { _GlobeView as GlobeView } from 'deck.gl'`. Using `GlobeView` directly fails at build time (not exported from dist/index.js).
+
 ---
 
 ## 2026-04-14 — US-001: Scaffold Vite + React + TypeScript project
@@ -39,5 +43,46 @@
 - Files must go in the WORKTREE path, not in C:/Users/ove.sundal/WebstormProjects/PlateTectonicPlayer/ (which is on branch main)
 - Shell CWD resets between Bash commands — always `cd /path && command`
 - The worktree `.git` file points to `WebstormProjects/PlateTectonicPlayer/.git/worktrees/thread-ae2b8fff` confirming they share one git repo
+
+---
+
+## 2026-04-14 — US-002 through US-010: Full implementation
+
+**Status**: ALL PASSED
+
+**US-002**: Add deck.gl and render static GlobeView
+- `src/components/Globe.tsx` — DeckGL + _GlobeView, layers + initialViewState props, #1a2744 background
+- Key learning: `GlobeView` is `_GlobeView` in deck.gl v9
+
+**US-003**: Create preprocess_muller.py data pipeline
+- `scripts/preprocess_muller.py` — CLI using click, geopandas, auto-detects age column, writes plates_{N}Ma.geojson
+- `scripts/requirements.txt` — geopandas, fiona, click
+
+**US-004**: Define TypeScript types for plate data
+- `src/types/plates.ts` — PlateProperties, PlateFeature, PlateFeatureCollection, AnimationState, AGE_MIN/MAX/STEP
+
+**US-005**: Implement usePlateData hook (fetch + cache)
+- `src/hooks/usePlateData.ts` — module-level Map cache, prefetches next 2 steps, error-safe
+
+**US-006**: Render GeoJsonLayer plate polygons on globe
+- `src/components/Globe.tsx` — added data prop, GeoJsonLayer with stroked outlines
+- `src/App.tsx` — updated to pass data from usePlateData(0)
+
+**US-007**: Implement useAnimation hook (rAF play/pause)
+- `src/hooks/useAnimation.ts` — rAF loop, play/pause/seek, auto-stops at AGE_MAX=750, exposes speed/setSpeed
+
+**US-008**: Create TimelineControls component
+- `src/components/TimelineControls.tsx` — Play/Pause button, range scrubber, age label, speed selector
+
+**US-009**: Wire App.tsx
+- `src/App.tsx` — useAnimation + usePlateData + Globe + TimelineControls + AgeLabel fully wired
+
+**US-010**: Polish
+- `src/components/AgeLabel.tsx` — prominent age display top-center
+- `src/components/Globe.tsx` — filled plates with PLATEID1 hash colors (alpha 80)
+- `src/components/TimelineControls.tsx` — 10/30/100 Ma/s speed selector
+- `src/hooks/useAnimation.ts` — exposes speed + setSpeed
+
+**All criteria verified**: `npx tsc --noEmit` ✓, `npx eslint src` ✓, `npx vite build` ✓
 
 ---

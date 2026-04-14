@@ -41,8 +41,8 @@
       "technicalNotes": "Install: `npm install deck.gl @deck.gl/react`. Use DeckGL from '@deck.gl/react', GlobeView from 'deck.gl'. GlobeView initialViewState: { longitude: 0, latitude: 20, zoom: 1 }. For basemap, use a SimpleMeshLayer with a sphere or a solid background color — avoid Mapbox to keep it dependency-free. File to create: src/components/Globe.tsx.",
       "dependsOn": ["US-001"],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Note: GlobeView is exported as _GlobeView in deck.gl v9 (experimental). Import as `import { _GlobeView as GlobeView } from 'deck.gl'`."
     },
     {
       "id": "US-003",
@@ -61,8 +61,8 @@
       "technicalNotes": "Use geopandas to read the Muller GPKG. Filter by age column (e.g., 'age' or 'reconstruction_age' depending on schema). Export each age slice as GeoJSON with geopandas .to_file(path, driver='GeoJSON'). Output path: public/data/muller/plates_{N}Ma.geojson. Create scripts/requirements.txt with geopandas, fiona, click. Files to create: scripts/preprocess_muller.py, scripts/requirements.txt.",
       "dependsOn": [],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Files: scripts/preprocess_muller.py, scripts/requirements.txt."
     },
     {
       "id": "US-004",
@@ -79,8 +79,8 @@
       "technicalNotes": "File to create: src/types/plates.ts. Import types from 'geojson' (already available via @types/geojson installed in US-002). Use `import type` for all GeoJSON imports to avoid runtime overhead.",
       "dependsOn": ["US-001"],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. File: src/types/plates.ts."
     },
     {
       "id": "US-005",
@@ -99,8 +99,8 @@
       "technicalNotes": "File to create: src/hooks/usePlateData.ts. Use useState + useEffect for fetch lifecycle. Cache as module-level const (outside component): const cache = new Map<number, PlateFeatureCollection>(). Prefetch by calling fetch() without awaiting inside useEffect (fire-and-forget into cache). URL pattern: `/data/muller/plates_${age}Ma.geojson`. Import PlateFeatureCollection, AGE_STEP, AGE_MAX from src/types/plates.ts.",
       "dependsOn": ["US-004"],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. File: src/hooks/usePlateData.ts."
     },
     {
       "id": "US-006",
@@ -118,8 +118,8 @@
       "technicalNotes": "Modify src/components/Globe.tsx to accept data prop. Import GeoJsonLayer from 'deck.gl'. Layer config: new GeoJsonLayer({ id: 'plates', data, stroked: true, filled: false, getLineColor: [255, 200, 0, 200], lineWidthMinPixels: 1 }). Pass layers={data ? [plateLayer] : []} to DeckGL. Also update src/App.tsx to call usePlateData(0) and pass result to Globe. Files to modify: src/components/Globe.tsx, src/App.tsx.",
       "dependsOn": ["US-002", "US-005"],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Globe.tsx updated with data prop + GeoJsonLayer."
     },
     {
       "id": "US-007",
@@ -139,8 +139,8 @@
       "technicalNotes": "File to create: src/hooks/useAnimation.ts. Use useRef<number | null> for rAF handle and useRef<number> for lastTimestamp. State: useState for isPlaying and currentAge. rAF callback: compute delta = now - lastTimestamp, advance age by speed * delta / 1000, clamp to [AGE_MIN, AGE_MAX]. Import AGE_MIN, AGE_MAX, AnimationState from src/types/plates.ts.",
       "dependsOn": ["US-004"],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. File: src/hooks/useAnimation.ts. Also exposes speed and setSpeed for US-010."
     },
     {
       "id": "US-008",
@@ -160,8 +160,8 @@
       "technicalNotes": "File to create: src/components/TimelineControls.tsx. Props interface: { isPlaying: boolean; currentAge: number; onPlay: () => void; onPause: () => void; onSeek: (age: number) => void }. Use inline styles or a CSS module for bottom overlay positioning. The age label should be prominent — large font, light color on dark background.",
       "dependsOn": ["US-007"],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. File: src/components/TimelineControls.tsx. Speed selector added ahead-of-schedule for US-010."
     },
     {
       "id": "US-009",
@@ -182,8 +182,8 @@
       "technicalNotes": "Rewrite src/App.tsx. Import useAnimation from src/hooks/useAnimation.ts, usePlateData from src/hooks/usePlateData.ts, Globe from src/components/Globe.tsx, TimelineControls from src/components/TimelineControls.tsx. Layout: position: relative on a full-viewport div containing Globe; TimelineControls positioned absolute bottom. Pass globe data={plateData.data} and controls props from animation hook.",
       "dependsOn": ["US-006", "US-008"],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. App.tsx wires all hooks and components."
     },
     {
       "id": "US-010",
@@ -202,8 +202,8 @@
       "technicalNotes": "Create src/components/AgeLabel.tsx. Modify src/components/Globe.tsx to add filled: true, getFillColor based on feature PLATEID1 (use (id * 2654435761) & 0xFFFFFF for hash coloring, with alpha ~80). Modify src/components/TimelineControls.tsx to add speed selector. Expose speed and setSpeed from useAnimation hook (add to return value). Dark ocean background: set DeckGL style={{ background: '#1a2744' }}. Files to modify: Globe.tsx, TimelineControls.tsx, useAnimation.ts. File to create: AgeLabel.tsx.",
       "dependsOn": ["US-009"],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented in iteration 1. Files: AgeLabel.tsx (new), Globe.tsx, TimelineControls.tsx, useAnimation.ts, App.tsx (modified)."
     }
   ]
 }
