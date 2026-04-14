@@ -1,0 +1,60 @@
+{
+  "project": "PlateTectonicPlayer",
+  "branchName": "ralph/static-globe-rendering",
+  "prdFile": "prd.md",
+  "description": "Install deck.gl and render a full-screen 3D globe with world basemap as the visual foundation for plate tectonic data.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Install deck.gl dependencies",
+      "description": "As a developer, I want deck.gl and its peer packages installed so that I can import GlobeView and layer classes in the project.",
+      "acceptanceCriteria": [
+        "@deck.gl/core, @deck.gl/layers, @deck.gl/geo-layers, and @deck.gl/react are listed in dependencies in package.json",
+        "node_modules contains the installed packages (npm install succeeds with no errors)",
+        "`npm run typecheck` exits with code 0 after installation"
+      ],
+      "technicalNotes": "Run: npm install @deck.gl/core @deck.gl/layers @deck.gl/geo-layers @deck.gl/react. deck.gl ships its own TypeScript declarations; no @types/ packages are needed. Project uses ES modules (\"type\": \"module\" in package.json) and Vite 6 — no bundler config changes required.",
+      "dependsOn": [],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create Globe.tsx component with GlobeView and world basemap",
+      "description": "As a developer, I want a Globe React component that renders a full-screen 3D Earth using deck.gl GlobeView so that land masses are visible against a dark space background.",
+      "acceptanceCriteria": [
+        "File src/components/Globe.tsx exists and exports a default React component named Globe",
+        "Component renders a DeckGL canvas using GlobeView (imported from @deck.gl/core)",
+        "A GeoJsonLayer is added using the Natural Earth 110m land GeoJSON from https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_land.json",
+        "GeoJsonLayer has filled: true and a visible getFillColor (e.g. [70, 130, 60, 255])",
+        "Initial view state is longitude: 0, latitude: 0, zoom: 0",
+        "The DeckGL container fills 100% of its parent width and height (width: '100%', height: '100%' or equivalent)",
+        "`npm run typecheck` exits with code 0"
+      ],
+      "technicalNotes": "Create src/components/ directory. Import pattern: `import DeckGL from '@deck.gl/react'`, `import { GlobeView } from '@deck.gl/core'`, `import { GeoJsonLayer } from '@deck.gl/layers'`. Pass `views={new GlobeView()}` to DeckGL. Use `initialViewState` prop for the starting camera. Set `controller={true}` to enable mouse orbit/zoom. The DeckGL component manages its own canvas; no separate canvas element needed. TypeScript strict mode is on (tsconfig.app.json) — type all props explicitly.",
+      "dependsOn": ["US-001"],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Wire Globe into App.tsx full-screen and verify type-check",
+      "description": "As a developer, I want the Globe component rendered full-screen in App.tsx and the TypeScript build to be error-free so that opening the dev server shows the 3D globe immediately.",
+      "acceptanceCriteria": [
+        "src/App.tsx imports Globe from './components/Globe' and renders <Globe /> as its sole child",
+        "The root wrapper div in App.tsx has style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, overflow: 'hidden', background: '#000010' }} or equivalent full-screen dark styling",
+        "html, body, and #root have no default browser margins/padding (add a global CSS reset in src/index.css or inline on the root element)",
+        "`npm run typecheck` exits with code 0 (zero TypeScript errors across all src files)",
+        "`npm run lint` exits with code 0 (zero ESLint errors)",
+        "Running `npm run dev` and opening localhost:5173 shows a 3D globe with visible green land masses"
+      ],
+      "technicalNotes": "Update src/App.tsx (currently at src/App.tsx:1-5 — single div with text). Replace content with <Globe /> import. Add global CSS reset either by editing src/index.css (if it exists) or importing a new one from main.tsx. Vite scaffolds typically include an index.css — check and add: `*, html, body { margin: 0; padding: 0; box-sizing: border-box; } #root { width: 100vw; height: 100vh; overflow: hidden; }`. The main.tsx entry point (src/main.tsx) does not need changes.",
+      "dependsOn": ["US-002"],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
