@@ -1,0 +1,209 @@
+{
+  "project": "PlateTectonicPlayer",
+  "branchName": "ralph/plate-tectonic-player",
+  "prdFile": "prd.md",
+  "description": "Animate Muller paleogeographic plate polygons across 0–750 Ma on a deck.gl 3D globe with play/pause and timeline scrubber",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Scaffold Vite + React + TypeScript project",
+      "description": "As a developer, I want a working Vite + React + TypeScript project scaffold so that all subsequent stories have a compile-and-run baseline to build on.",
+      "acceptanceCriteria": [
+        "package.json exists with scripts: dev, build, preview, typecheck, lint",
+        "tsconfig.json exists with strict mode enabled and JSX set to react-jsx",
+        "vite.config.ts exists with @vitejs/plugin-react configured",
+        "index.html exists referencing src/main.tsx",
+        "src/main.tsx renders <App /> into #root",
+        "src/App.tsx exists and renders a placeholder <div>",
+        "`npx tsc --noEmit` passes with zero errors",
+        "`npx vite build` completes without errors"
+      ],
+      "technicalNotes": "Use `npm create vite@latest . -- --template react-ts` as starting point. Dependencies: react, react-dom, typescript, @vitejs/plugin-react, vite. Dev server entry: src/main.tsx. All files go in C:/Users/ove.sundal/WebstormProjects/PlateTectonicPlayer/.",
+      "dependsOn": [],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add deck.gl and render static GlobeView",
+      "description": "As a developer, I want a Globe component that renders an interactive 3D globe using deck.gl GlobeView so that subsequent stories can layer plate polygon data on top.",
+      "acceptanceCriteria": [
+        "deck.gl and @deck.gl/react are listed as dependencies in package.json",
+        "@types/geojson is listed as a dev dependency",
+        "src/components/Globe.tsx exists and exports a Globe React component",
+        "Globe renders a DeckGL component with views={[new GlobeView()]} and a blue-tinted basemap (or solid color background)",
+        "Globe accepts optional props: layers (DeckGL Layer array), initialViewState",
+        "Globe fills its parent container (width: 100%, height: 100%)",
+        "`npx tsc --noEmit` passes with zero errors",
+        "Dev server shows a 3D globe with no console errors"
+      ],
+      "technicalNotes": "Install: `npm install deck.gl @deck.gl/react`. Use DeckGL from '@deck.gl/react', GlobeView from 'deck.gl'. GlobeView initialViewState: { longitude: 0, latitude: 20, zoom: 1 }. For basemap, use a SimpleMeshLayer with a sphere or a solid background color — avoid Mapbox to keep it dependency-free. File to create: src/components/Globe.tsx.",
+      "dependsOn": ["US-001"],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Create preprocess_muller.py data pipeline",
+      "description": "As a developer, I want a Python script that converts raw Muller GPKG/Shapefile data into per-timestep GeoJSON snapshots so that the browser app can load static files without a backend.",
+      "acceptanceCriteria": [
+        "scripts/preprocess_muller.py exists",
+        "Script accepts --input (path to Muller GPKG or Shapefile) and --output (target directory) CLI arguments",
+        "Script iterates ages 0 to 750 in steps of 5 Ma and writes plates_{N}Ma.geojson for each age",
+        "Each output GeoJSON is a valid FeatureCollection with plate polygon features",
+        "Script prints progress (age being processed) and final file count",
+        "Script uses geopandas and fiona (listed in scripts/requirements.txt)",
+        "A README comment at the top of the script explains how to run it",
+        "Script does not crash on missing ages — logs a warning and skips"
+      ],
+      "technicalNotes": "Use geopandas to read the Muller GPKG. Filter by age column (e.g., 'age' or 'reconstruction_age' depending on schema). Export each age slice as GeoJSON with geopandas .to_file(path, driver='GeoJSON'). Output path: public/data/muller/plates_{N}Ma.geojson. Create scripts/requirements.txt with geopandas, fiona, click. Files to create: scripts/preprocess_muller.py, scripts/requirements.txt.",
+      "dependsOn": [],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Define TypeScript types for plate data",
+      "description": "As a developer, I want shared TypeScript types for plate GeoJSON data and animation state so that all hooks and components have a single source of truth for data shapes.",
+      "acceptanceCriteria": [
+        "src/types/plates.ts exists and exports PlateProperties, PlateFeature, PlateFeatureCollection, AnimationState",
+        "PlateFeature extends GeoJSON.Feature<MultiPolygon | Polygon, PlateProperties>",
+        "AnimationState has fields: isPlaying (boolean), currentAge (number, 0–750 Ma), speed (number, Ma per real second)",
+        "Constants exported: AGE_MIN=0, AGE_MAX=750, AGE_STEP=5",
+        "No imports from non-existent modules — only imports from 'geojson' (type-only)",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "File to create: src/types/plates.ts. Import types from 'geojson' (already available via @types/geojson installed in US-002). Use `import type` for all GeoJSON imports to avoid runtime overhead.",
+      "dependsOn": ["US-001"],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Implement usePlateData hook (fetch + cache)",
+      "description": "As a developer, I want a usePlateData hook that fetches and caches GeoJSON plate data per timestep so that the animation loop can request data for any age without redundant network requests.",
+      "acceptanceCriteria": [
+        "src/hooks/usePlateData.ts exists and exports usePlateData",
+        "Hook signature: usePlateData(currentAge: number): { data: PlateFeatureCollection | null; isLoading: boolean }",
+        "Hook fetches /data/muller/plates_{N}Ma.geojson where N is the nearest AGE_STEP multiple to currentAge",
+        "Fetched results are cached in a module-level Map<number, PlateFeatureCollection> — no re-fetches for cached ages",
+        "Hook prefetches the next 2 timesteps (currentAge + AGE_STEP, currentAge + 2*AGE_STEP) when data for currentAge loads",
+        "isLoading is true only while the fetch for currentAge is in flight",
+        "Fetch errors are caught — hook returns data: null and isLoading: false on error",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "File to create: src/hooks/usePlateData.ts. Use useState + useEffect for fetch lifecycle. Cache as module-level const (outside component): const cache = new Map<number, PlateFeatureCollection>(). Prefetch by calling fetch() without awaiting inside useEffect (fire-and-forget into cache). URL pattern: `/data/muller/plates_${age}Ma.geojson`. Import PlateFeatureCollection, AGE_STEP, AGE_MAX from src/types/plates.ts.",
+      "dependsOn": ["US-004"],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Render GeoJsonLayer plate polygons on globe",
+      "description": "As a user, I want to see plate polygon outlines on the 3D globe for a given age so that the data pipeline and rendering stack are end-to-end verified.",
+      "acceptanceCriteria": [
+        "Globe.tsx accepts a data prop of type PlateFeatureCollection | null",
+        "When data is provided, a GeoJsonLayer renders plate polygon outlines on the globe",
+        "GeoJsonLayer uses stroked: true, filled: false (outline-only style) with a visible color",
+        "When data is null, no GeoJsonLayer is rendered (or an empty one — no crash)",
+        "App.tsx passes data from usePlateData(0) to Globe at age 0 Ma for initial render verification",
+        "Dev server shows plate polygon outlines on the globe at present-day (0 Ma)",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "Modify src/components/Globe.tsx to accept data prop. Import GeoJsonLayer from 'deck.gl'. Layer config: new GeoJsonLayer({ id: 'plates', data, stroked: true, filled: false, getLineColor: [255, 200, 0, 200], lineWidthMinPixels: 1 }). Pass layers={data ? [plateLayer] : []} to DeckGL. Also update src/App.tsx to call usePlateData(0) and pass result to Globe. Files to modify: src/components/Globe.tsx, src/App.tsx.",
+      "dependsOn": ["US-002", "US-005"],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Implement useAnimation hook (rAF play/pause)",
+      "description": "As a developer, I want a useAnimation hook that drives the geological age forward over real time using requestAnimationFrame so that the animation is smooth and frame-rate-aware.",
+      "acceptanceCriteria": [
+        "src/hooks/useAnimation.ts exists and exports useAnimation",
+        "Hook signature: useAnimation(speed?: number): { isPlaying: boolean; currentAge: number; play: () => void; pause: () => void; seek: (age: number) => void }",
+        "Default speed is 30 Ma per second of real time",
+        "When playing, currentAge advances using requestAnimationFrame (delta time between frames in ms)",
+        "When currentAge reaches AGE_MAX (750), animation stops and isPlaying becomes false",
+        "play() starts the rAF loop; pause() cancels it via cancelAnimationFrame",
+        "seek(age) sets currentAge to age (clamped to [AGE_MIN, AGE_MAX]) and does not affect isPlaying state",
+        "rAF handle is stored in useRef and cancelled on component unmount",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "File to create: src/hooks/useAnimation.ts. Use useRef<number | null> for rAF handle and useRef<number> for lastTimestamp. State: useState for isPlaying and currentAge. rAF callback: compute delta = now - lastTimestamp, advance age by speed * delta / 1000, clamp to [AGE_MIN, AGE_MAX]. Import AGE_MIN, AGE_MAX, AnimationState from src/types/plates.ts.",
+      "dependsOn": ["US-004"],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Create TimelineControls component",
+      "description": "As a user, I want play/pause and timeline scrubber controls so that I can control the animation and jump to any geological age.",
+      "acceptanceCriteria": [
+        "src/components/TimelineControls.tsx exists and exports TimelineControls",
+        "Component renders a Play/Pause toggle button that switches label based on isPlaying prop",
+        "Component renders an HTML range input (scrubber) with min=0, max=750, step=5",
+        "Scrubber value reflects currentAge prop",
+        "Changing the scrubber calls onSeek(newAge) prop",
+        "Clicking Play/Pause calls onPlay() or onPause() based on current isPlaying state",
+        "Component also renders current age as text (e.g., '250 Ma')",
+        "Component is styled to overlay at the bottom of the screen (absolute or fixed positioning)",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "File to create: src/components/TimelineControls.tsx. Props interface: { isPlaying: boolean; currentAge: number; onPlay: () => void; onPause: () => void; onSeek: (age: number) => void }. Use inline styles or a CSS module for bottom overlay positioning. The age label should be prominent — large font, light color on dark background.",
+      "dependsOn": ["US-007"],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Wire App.tsx — connect animation, data, globe, controls",
+      "description": "As a user, I want the full animation experience where clicking Play animates plate polygons across 0–750 Ma on the 3D globe with the timeline scrubber tracking position.",
+      "acceptanceCriteria": [
+        "App.tsx uses useAnimation() and usePlateData(currentAge) hooks",
+        "Globe component receives plate data for the current animated age",
+        "TimelineControls receives isPlaying, currentAge, and handlers from useAnimation",
+        "Globe fills the full viewport (100vw × 100vh); TimelineControls overlays on top",
+        "Clicking Play starts animation — plate polygons update as age advances",
+        "Dragging the scrubber seeks to the selected age and updates the globe immediately",
+        "Animation auto-stops at 750 Ma",
+        "Dev server shows the complete working experience with no console errors",
+        "`npx vite build` completes without errors",
+        "`npx tsc --noEmit` passes with zero errors"
+      ],
+      "technicalNotes": "Rewrite src/App.tsx. Import useAnimation from src/hooks/useAnimation.ts, usePlateData from src/hooks/usePlateData.ts, Globe from src/components/Globe.tsx, TimelineControls from src/components/TimelineControls.tsx. Layout: position: relative on a full-viewport div containing Globe; TimelineControls positioned absolute bottom. Pass globe data={plateData.data} and controls props from animation hook.",
+      "dependsOn": ["US-006", "US-008"],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Polish — color-coded plates, AgeLabel, speed control",
+      "description": "As a user, I want color-coded plate polygons and a cleaner UI with speed control so that the visualization is more legible and the experience feels polished.",
+      "acceptanceCriteria": [
+        "src/components/AgeLabel.tsx exists and renders the current age prominently (e.g., '250 Ma' large text, top-center of screen)",
+        "GeoJsonLayer in Globe.tsx uses filled: true with a semi-transparent fill color derived from PLATEID1 (hash-based color, consistent per plate)",
+        "TimelineControls includes a speed selector with at least 3 options: 10 Ma/s, 30 Ma/s, 100 Ma/s",
+        "Speed selection updates useAnimation speed — animation visibly changes pace",
+        "Globe background (ocean) uses a dark blue color (not white)",
+        "Plate polygon stroke remains visible over fill",
+        "`npx tsc --noEmit` passes with zero errors",
+        "`npx vite build` completes without errors"
+      ],
+      "technicalNotes": "Create src/components/AgeLabel.tsx. Modify src/components/Globe.tsx to add filled: true, getFillColor based on feature PLATEID1 (use (id * 2654435761) & 0xFFFFFF for hash coloring, with alpha ~80). Modify src/components/TimelineControls.tsx to add speed selector. Expose speed and setSpeed from useAnimation hook (add to return value). Dark ocean background: set DeckGL style={{ background: '#1a2744' }}. Files to modify: Globe.tsx, TimelineControls.tsx, useAnimation.ts. File to create: AgeLabel.tsx.",
+      "dependsOn": ["US-009"],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
