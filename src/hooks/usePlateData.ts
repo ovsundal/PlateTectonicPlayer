@@ -11,16 +11,21 @@ interface UsePlateDataResult {
   error: string | null
 }
 
+function snapToStep(age: number, step = 5): number {
+  return Math.round(age / step) * step
+}
+
 export function usePlateData(timeMa: number): UsePlateDataResult {
-  const [data, setData] = useState<PlatePolygonCollection | null>(() => cache.get(timeMa) ?? null)
-  const [loading, setLoading] = useState<boolean>(() => !cache.has(timeMa))
+  const snappedTime = snapToStep(timeMa)
+  const [data, setData] = useState<PlatePolygonCollection | null>(() => cache.get(snappedTime) ?? null)
+  const [loading, setLoading] = useState<boolean>(() => !cache.has(snappedTime))
   const [error, setError] = useState<string | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    if (cache.has(timeMa)) {
-      setData(cache.get(timeMa)!)
+    if (cache.has(snappedTime)) {
+      setData(cache.get(snappedTime)!)
       setLoading(false)
       setError(null)
       return
@@ -33,7 +38,7 @@ export function usePlateData(timeMa: number): UsePlateDataResult {
     setLoading(true)
     setError(null)
 
-    const url = `${GWS_BASE}?time=${timeMa}&model=MULLER2022`
+    const url = `${GWS_BASE}?time=${snappedTime}&model=MULLER2022`
 
     fetch(url, { signal: controller.signal })
       .then((res) => {
@@ -41,7 +46,7 @@ export function usePlateData(timeMa: number): UsePlateDataResult {
         return res.json() as Promise<PlatePolygonCollection>
       })
       .then((json) => {
-        cache.set(timeMa, json)
+        cache.set(snappedTime, json)
         setData(json)
         setLoading(false)
       })
@@ -54,7 +59,7 @@ export function usePlateData(timeMa: number): UsePlateDataResult {
     return () => {
       controller.abort()
     }
-  }, [timeMa])
+  }, [snappedTime])
 
   return { data, loading, error }
 }

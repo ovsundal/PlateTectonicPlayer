@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import type * as GeoJSON from 'geojson'
 import DeckGL from '@deck.gl/react'
 import { _GlobeView as GlobeView } from '@deck.gl/core'
 import { GeoJsonLayer } from '@deck.gl/layers'
@@ -8,17 +9,19 @@ import { usePlateData } from '../hooks/usePlateData'
 const COUNTRIES_GEOJSON_URL =
   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
 
-const PLATE_TIME_MA = 250
-
 const INITIAL_VIEW_STATE = {
   longitude: 0,
   latitude: 20,
   zoom: 0,
 }
 
-export default function Globe() {
+interface GlobeProps {
+  currentAge: number
+}
+
+export default function Globe({ currentAge }: GlobeProps) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE)
-  const { data: plateData, loading, error } = usePlateData(PLATE_TIME_MA)
+  const { data: plateData, loading, error } = usePlateData(currentAge)
 
   const onViewStateChange = useCallback(({ viewState: vs }: ViewStateChangeParameters) => {
     setViewState(vs as typeof INITIAL_VIEW_STATE)
@@ -38,7 +41,7 @@ export default function Globe() {
       ? [
           new GeoJsonLayer({
             id: 'plate-polygons',
-            data: plateData,
+            data: plateData as unknown as GeoJSON.FeatureCollection,
             stroked: true,
             filled: true,
             getFillColor: [50, 100, 200, 100],
@@ -63,7 +66,7 @@ export default function Globe() {
         <div
           style={{
             position: 'absolute',
-            top: 12,
+            top: 72,
             left: '50%',
             transform: 'translateX(-50%)',
             color: '#fff',
@@ -74,14 +77,14 @@ export default function Globe() {
             pointerEvents: 'none',
           }}
         >
-          Loading plate polygons ({PLATE_TIME_MA} Ma)…
+          Loading plate polygons…
         </div>
       )}
       {error && (
         <div
           style={{
             position: 'absolute',
-            top: 12,
+            top: 72,
             left: '50%',
             transform: 'translateX(-50%)',
             color: '#f88',
