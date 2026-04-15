@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { PlatePolygonCollection } from '../types/plates'
 
-const GWS_BASE = 'https://gws.gplates.org/topology/plate_polygons'
-
 const cache = new Map<number, PlatePolygonCollection>()
 
 interface UsePlateDataResult {
@@ -38,11 +36,11 @@ export function usePlateData(timeMa: number): UsePlateDataResult {
     setLoading(true)
     setError(null)
 
-    const url = `${GWS_BASE}?time=${snappedTime}&model=MULLER2022`
+    const url = `/data/muller/plates_${snappedTime}Ma.json`
 
     fetch(url, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error(`GWS responded ${res.status}`)
+        if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`)
         return res.json() as Promise<PlatePolygonCollection>
       })
       .then((json) => {
