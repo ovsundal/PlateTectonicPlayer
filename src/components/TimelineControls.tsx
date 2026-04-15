@@ -1,5 +1,7 @@
 import type { PlayDirection } from '../hooks/useAnimation'
-import { MAJOR_EVENTS } from '../data/geologicalTimescale'
+import { MAJOR_EVENTS, PERIODS } from '../data/geologicalTimescale'
+
+const MAX_AGE = 750
 
 const SPEEDS = [0.5, 1, 2, 5]
 
@@ -74,6 +76,47 @@ export default function TimelineControls({
             </button>
           )
         })}
+      </div>
+
+      {/* Geological period colour strip */}
+      <div
+        style={{
+          display: 'flex',
+          height: 8,
+          margin: '6px 24px 0',
+          borderRadius: 4,
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        {PERIODS.map((p) => {
+          const visibleStart = Math.min(p.endMa, MAX_AGE)
+          const visibleEnd = Math.min(p.startMa, MAX_AGE)
+          if (visibleEnd <= 0) return null
+          const width = ((visibleEnd - visibleStart) / MAX_AGE) * 100
+          return (
+            <div
+              key={p.name}
+              title={`${p.name} (${p.startMa}–${p.endMa} Ma)`}
+              style={{ width: `${width}%`, background: p.color, opacity: 0.75, flexShrink: 0 }}
+            />
+          )
+        })}
+        {/* Current position needle */}
+        <div
+          style={{
+            position: 'absolute',
+            left: `${(currentAge / MAX_AGE) * 100}%`,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            background: '#fff',
+            borderRadius: 1,
+            transform: 'translateX(-50%)',
+            transition: 'left 0.1s linear',
+            boxShadow: '0 0 4px rgba(255,255,255,0.8)',
+          }}
+        />
       </div>
 
       {/* Main controls row */}

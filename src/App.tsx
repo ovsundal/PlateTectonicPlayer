@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Globe from './components/Globe'
 import AgeLabel from './components/AgeLabel'
 import TimelineControls from './components/TimelineControls'
+import NowPanel from './components/NowPanel'
 import { useAnimation } from './hooks/useAnimation'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, background: '#000000', overflow: 'hidden' }}>
       <Globe currentAge={currentAge} showCountries={showCountries} />
       <AgeLabel age={currentAge} />
+      <NowPanel currentAge={currentAge} />
       <TimelineControls
         currentAge={currentAge}
         isPlaying={isPlaying}
