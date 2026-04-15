@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const OUT_DIR = join(__dirname, '..', 'public', 'data', 'muller')
-const BASE_URL = 'https://gws.gplates.org/topology/plate_polygons'
+const BASE_URL = 'https://gws.gplates.org/reconstruct/coastlines'
 const MODEL = 'MULLER2022'
 const STEP = 5
 const MIN_MA = 0

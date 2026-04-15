@@ -6,8 +6,7 @@ import { GeoJsonLayer } from '@deck.gl/layers'
 import type { ViewStateChangeParameters } from '@deck.gl/core'
 import { usePlateData } from '../hooks/usePlateData'
 
-const COUNTRIES_GEOJSON_URL =
-  'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+const COUNTRIES_URL = '/data/ne_countries_110m.geojson'
 
 const INITIAL_VIEW_STATE = {
   longitude: 0,
@@ -15,11 +14,27 @@ const INITIAL_VIEW_STATE = {
   zoom: 0,
 }
 
-interface GlobeProps {
-  currentAge: number
+// Full-globe polygon rendered as the ocean base layer
+const OCEAN_GEOJSON: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]]],
+      },
+      properties: {},
+    },
+  ],
 }
 
-export default function Globe({ currentAge }: GlobeProps) {
+interface GlobeProps {
+  currentAge: number
+  showCountries: boolean
+}
+
+export default function Globe({ currentAge, showCountries }: GlobeProps) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE)
   const { data: plateData, loading, error } = usePlateData(currentAge)
 
@@ -29,24 +44,34 @@ export default function Globe({ currentAge }: GlobeProps) {
 
   const layers = [
     new GeoJsonLayer({
-      id: 'countries',
-      data: COUNTRIES_GEOJSON_URL,
-      stroked: true,
+      id: 'ocean',
+      data: OCEAN_GEOJSON,
+      stroked: false,
       filled: true,
-      getFillColor: [30, 80, 40],
-      getLineColor: [100, 180, 80],
-      lineWidthMinPixels: 0.5,
+      getFillColor: [10, 40, 90, 255],
     }),
     ...(plateData
       ? [
           new GeoJsonLayer({
-            id: 'plate-polygons',
+            id: 'coastlines',
             data: plateData as unknown as GeoJSON.FeatureCollection,
             stroked: true,
             filled: true,
-            getFillColor: [50, 100, 200, 100],
-            getLineColor: [80, 160, 255, 220],
+            getFillColor: [139, 115, 85, 255],
+            getLineColor: [180, 150, 100, 255],
             lineWidthMinPixels: 1,
+          }),
+        ]
+      : []),
+    ...(showCountries
+      ? [
+          new GeoJsonLayer({
+            id: 'countries-ghost',
+            data: COUNTRIES_URL,
+            stroked: true,
+            filled: false,
+            getLineColor: [255, 255, 255, 55],
+            lineWidthMinPixels: 0.5,
           }),
         ]
       : []),

@@ -143,3 +143,5 @@ vite.config.ts.timestamp-*
 # Pre-downloaded plate polygon data (~25 MB) — regenerate with:
 #   node scripts/download-plate-data.mjs
 public/data/muller/
+# Claude Code local settings
+.claude/

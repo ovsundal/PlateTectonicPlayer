@@ -3,6 +3,19 @@ import type { PlatePolygonCollection } from '../types/plates'
 
 const cache = new Map<number, PlatePolygonCollection>()
 
+// Eagerly prefetch all timesteps in the background so the animation never stalls.
+// Runs once at module load; individual files are skipped once cached.
+const ALL_AGES: number[] = Array.from({ length: 151 }, (_, i) => i * 5)
+;(function prefetchAll() {
+  for (const ma of ALL_AGES) {
+    if (cache.has(ma)) continue
+    fetch(`/data/muller/plates_${ma}Ma.json`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json: PlatePolygonCollection) => { cache.set(ma, json) })
+      .catch(() => { /* silently skip — will retry on demand */ })
+  }
+})()
+
 interface UsePlateDataResult {
   data: PlatePolygonCollection | null
   loading: boolean
