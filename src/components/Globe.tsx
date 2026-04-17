@@ -6,7 +6,7 @@ import { GeoJsonLayer } from '@deck.gl/layers'
 import type { ViewStateChangeParameters } from '@deck.gl/core'
 import { usePlateData } from '../hooks/usePlateData'
 import { buildGraticule } from '../utils/buildGraticule'
-import { getPlateColor } from '../utils/plateColors'
+import { getRegionColor } from '../utils/plateColors'
 
 const COUNTRIES_URL = `${import.meta.env.BASE_URL}data/ne_countries_110m.geojson`
 
@@ -67,7 +67,7 @@ export default function Globe({ currentAge, showCountries, showGraticule, colorB
             stroked: true,
             filled: true,
             getFillColor: colorByPlate
-              ? (_f: GeoJSON.Feature, { index }: { index: number }) => getPlateColor(index)
+              ? (f: GeoJSON.Feature) => getRegionColor(f)
               : [139, 115, 85, 255],
             getLineColor: [180, 150, 100, 255],
             lineWidthMinPixels: 1,

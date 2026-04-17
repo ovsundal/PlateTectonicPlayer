@@ -1,39 +1,69 @@
 /**
- * Deterministic feature-index → RGBA color mapping for tectonic plate visualization.
- * Uses a curated palette of 12 distinct earth-tone and muted colors that look good
- * on a dark ocean background. Each polygon gets a color by index modulo palette size.
+ * Region-based plate coloring: compute polygon centroid, assign color
+ * based on which geographic region it falls into.
  */
 
-export const PLATE_PALETTE: [number, number, number, number][] = [
-  [180, 140, 100, 255],  // tan
-  [120, 160, 90, 255],   // olive green
-  [200, 120, 80, 255],   // terracotta
-  [100, 150, 160, 255],  // teal
-  [190, 170, 110, 255],  // khaki
-  [150, 100, 130, 255],  // mauve
-  [160, 180, 120, 255],  // sage
-  [210, 150, 120, 255],  // peach
-  [130, 130, 170, 255],  // lavender
-  [170, 130, 80, 255],   // bronze
-  [110, 170, 140, 255],  // seafoam
-  [190, 110, 110, 255],  // dusty rose
+interface Region {
+  name: string
+  color: [number, number, number, number]
+  lonMin: number
+  lonMax: number
+  latMin: number
+  latMax: number
+}
+
+const REGIONS: Region[] = [
+  { name: 'North America',  color: [180, 140, 100, 255], lonMin: -170, lonMax: -50,  latMin: 15,  latMax: 85 },
+  { name: 'South America',  color: [120, 170, 90, 255],  lonMin: -90,  lonMax: -30,  latMin: -60, latMax: 15 },
+  { name: 'Europe',         color: [130, 130, 180, 255], lonMin: -15,  lonMax: 45,   latMin: 35,  latMax: 75 },
+  { name: 'Africa',         color: [210, 150, 100, 255], lonMin: -20,  lonMax: 55,   latMin: -40, latMax: 35 },
+  { name: 'Central Asia',   color: [170, 130, 80, 255],  lonMin: 45,   lonMax: 100,  latMin: 25,  latMax: 75 },
+  { name: 'East Asia',      color: [190, 110, 110, 255], lonMin: 100,  lonMax: 150,  latMin: 10,  latMax: 75 },
+  { name: 'South Asia',     color: [200, 170, 110, 255], lonMin: 60,   lonMax: 100,  latMin: -10, latMax: 35 },
+  { name: 'Southeast Asia', color: [160, 180, 120, 255], lonMin: 95,   lonMax: 155,  latMin: -15, latMax: 25 },
+  { name: 'Australia',      color: [190, 120, 70, 255],  lonMin: 110,  lonMax: 180,  latMin: -50, latMax: -10 },
+  { name: 'Antarctica',     color: [200, 220, 240, 255], lonMin: -180, lonMax: 180,  latMin: -90, latMax: -60 },
+  { name: 'Arctic',         color: [180, 210, 230, 255], lonMin: -180, lonMax: 180,  latMin: 70,  latMax: 90 },
+  { name: 'Pacific Islands',color: [100, 160, 160, 255], lonMin: 150,  lonMax: 180,  latMin: -50, latMax: 30 },
 ]
 
-export const PLATE_PALETTE_NAMES: string[] = [
-  'Tan',
-  'Olive',
-  'Terracotta',
-  'Teal',
-  'Khaki',
-  'Mauve',
-  'Sage',
-  'Peach',
-  'Lavender',
-  'Bronze',
-  'Seafoam',
-  'Rose',
-]
+export const REGION_LEGEND = REGIONS.map(r => ({ name: r.name, color: r.color }))
 
-export function getPlateColor(featureIndex: number): [number, number, number, number] {
-  return PLATE_PALETTE[Math.abs(featureIndex) % PLATE_PALETTE.length]
+const DEFAULT_COLOR: [number, number, number, number] = [150, 130, 110, 255]
+
+function computeCentroid(geometry: GeoJSON.Geometry): [number, number] {
+  let coords: number[][] = []
+
+  if (geometry.type === 'Polygon') {
+    coords = (geometry as GeoJSON.Polygon).coordinates[0]
+  } else if (geometry.type === 'MultiPolygon') {
+    // Use the first (usually largest) ring
+    coords = (geometry as GeoJSON.MultiPolygon).coordinates[0][0]
+  } else {
+    return [0, 0]
+  }
+
+  let lonSum = 0
+  let latSum = 0
+  for (const c of coords) {
+    lonSum += c[0]
+    latSum += c[1]
+  }
+  return [lonSum / coords.length, latSum / coords.length]
+}
+
+function findRegion(lon: number, lat: number): Region | undefined {
+  // Check more specific regions first (smaller boxes), then broader ones
+  for (const r of REGIONS) {
+    if (lat >= r.latMin && lat <= r.latMax && lon >= r.lonMin && lon <= r.lonMax) {
+      return r
+    }
+  }
+  return undefined
+}
+
+export function getRegionColor(feature: GeoJSON.Feature): [number, number, number, number] {
+  const [lon, lat] = computeCentroid(feature.geometry)
+  const region = findRegion(lon, lat)
+  return region?.color ?? DEFAULT_COLOR
 }

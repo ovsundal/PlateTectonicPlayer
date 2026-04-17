@@ -14,7 +14,7 @@ function App() {
   const { currentAge, isPlaying, playbackSpeed, direction, play, pause, setAge, setSpeed, setDirection } = useAnimation()
   const [showCountries, setShowCountries] = useState(true)
   const [showGraticule, setShowGraticule] = useState(true)
-  const [colorByPlate, setColorByPlate] = useState(true)
+  const [colorByPlate, setColorByPlate] = useState(false)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === '+' || e.key === '=') {

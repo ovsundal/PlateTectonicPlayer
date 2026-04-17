@@ -1,4 +1,4 @@
-import { PLATE_PALETTE, PLATE_PALETTE_NAMES } from '../utils/plateColors'
+import { REGION_LEGEND } from '../utils/plateColors'
 
 export default function PlateLegend({ visible }: { visible: boolean }) {
   if (!visible) return null
@@ -20,10 +20,10 @@ export default function PlateLegend({ visible }: { visible: boolean }) {
       }}
     >
       <div style={{ fontWeight: 600, marginBottom: 6, fontSize: 12, color: '#eee' }}>
-        Plate Colors
+        Regions
       </div>
-      {PLATE_PALETTE.map((color, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+      {REGION_LEGEND.map(({ name, color }) => (
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
           <div
             style={{
               width: 14,
@@ -33,14 +33,9 @@ export default function PlateLegend({ visible }: { visible: boolean }) {
               flexShrink: 0,
             }}
           />
-          <span>{PLATE_PALETTE_NAMES[i]}</span>
+          <span>{name}</span>
         </div>
       ))}
-      <div style={{ marginTop: 6, fontSize: 10, color: '#888', lineHeight: 1.3 }}>
-        Colors cycle across polygons.
-        <br />
-        Adjacent plates get distinct colors.
-      </div>
     </div>
   )
 }
