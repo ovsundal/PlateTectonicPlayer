@@ -5,6 +5,7 @@ import { _GlobeView as GlobeView } from '@deck.gl/core'
 import { GeoJsonLayer } from '@deck.gl/layers'
 import type { ViewStateChangeParameters } from '@deck.gl/core'
 import { usePlateData } from '../hooks/usePlateData'
+import { useBoundaryData } from '../hooks/useBoundaryData'
 
 const COUNTRIES_URL = '/data/ne_countries_110m.geojson'
 
@@ -29,20 +30,57 @@ const OCEAN_GEOJSON: GeoJSON.FeatureCollection = {
   ],
 }
 
+// Generate graticule GeoJSON at module level (30-degree grid)
+function buildGraticule(): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = []
+  for (let lat = -90; lat <= 90; lat += 30) {
+    const coords: [number, number][] = []
+    for (let lon = -180; lon <= 180; lon += 2) {
+      coords.push([lon, lat])
+    }
+    features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
+  }
+  for (let lon = -180; lon <= 180; lon += 30) {
+    const coords: [number, number][] = []
+    for (let lat = -90; lat <= 90; lat += 2) {
+      coords.push([lon, lat])
+    }
+    features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
+  }
+  return { type: 'FeatureCollection', features }
+}
+const GRATICULE_GEOJSON = buildGraticule()
+
+const CLIMATE_BANDS_GEOJSON: GeoJSON.FeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-180,66.5],[180,66.5],[180,90],[-180,90],[-180,66.5]]] }, properties: { zone: 'polar' } },
+    { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-180,23.5],[180,23.5],[180,66.5],[-180,66.5],[-180,23.5]]] }, properties: { zone: 'temperate' } },
+    { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-180,-23.5],[180,-23.5],[180,23.5],[-180,23.5],[-180,-23.5]]] }, properties: { zone: 'tropical' } },
+    { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-180,-66.5],[180,-66.5],[180,-23.5],[-180,-23.5],[-180,-66.5]]] }, properties: { zone: 'temperate' } },
+    { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[-180,-90],[180,-90],[180,-66.5],[-180,-66.5],[-180,-90]]] }, properties: { zone: 'polar' } },
+  ],
+}
+
 interface GlobeProps {
   currentAge: number
   showCountries: boolean
+  showGraticule: boolean
+  showClimateBands: boolean
+  showBoundaries: boolean
 }
 
-export default function Globe({ currentAge, showCountries }: GlobeProps) {
+export default function Globe({ currentAge, showCountries, showGraticule, showClimateBands, showBoundaries }: GlobeProps) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE)
   const { data: plateData, loading, error } = usePlateData(currentAge)
+  const { data: boundaryData } = useBoundaryData(currentAge)
 
   const onViewStateChange = useCallback(({ viewState: vs }: ViewStateChangeParameters) => {
     setViewState(vs as typeof INITIAL_VIEW_STATE)
   }, [])
 
   const layers = [
+    // 1. Ocean base
     new GeoJsonLayer({
       id: 'ocean',
       data: OCEAN_GEOJSON,
@@ -50,6 +88,24 @@ export default function Globe({ currentAge, showCountries }: GlobeProps) {
       filled: true,
       getFillColor: [10, 40, 90, 255],
     }),
+    // 2. Climate bands (behind coastlines)
+    ...(showClimateBands
+      ? [
+          new GeoJsonLayer({
+            id: 'climate-bands',
+            data: CLIMATE_BANDS_GEOJSON,
+            stroked: false,
+            filled: true,
+            getFillColor: (f: GeoJSON.Feature) => {
+              const zone = (f.properties as { zone: string }).zone
+              if (zone === 'tropical') return [255, 100, 50, 35]
+              if (zone === 'temperate') return [100, 200, 100, 25]
+              return [200, 220, 255, 30]
+            },
+          }),
+        ]
+      : []),
+    // 3. Coastlines
     ...(plateData
       ? [
           new GeoJsonLayer({
@@ -63,6 +119,39 @@ export default function Globe({ currentAge, showCountries }: GlobeProps) {
           }),
         ]
       : []),
+    // 4. Plate boundaries (on top of land)
+    ...(showBoundaries && boundaryData
+      ? [
+          new GeoJsonLayer({
+            id: 'boundaries',
+            data: boundaryData as unknown as GeoJSON.FeatureCollection,
+            stroked: true,
+            filled: false,
+            getLineColor: (f: GeoJSON.Feature) => {
+              const btype = (f.properties as { type: string }).type
+              if (btype === 'MidOceanRidge') return [255, 80, 60, 200]
+              if (btype === 'SubductionZone') return [60, 120, 255, 200]
+              if (btype === 'Transform') return [160, 160, 160, 180]
+              return [120, 120, 120, 100]
+            },
+            lineWidthMinPixels: 1.5,
+          }),
+        ]
+      : []),
+    // 5. Graticule grid overlay
+    ...(showGraticule
+      ? [
+          new GeoJsonLayer({
+            id: 'graticule',
+            data: GRATICULE_GEOJSON,
+            stroked: true,
+            filled: false,
+            getLineColor: [255, 255, 255, 40],
+            lineWidthMinPixels: 0.5,
+          }),
+        ]
+      : []),
+    // 6. Countries ghost (optional)
     ...(showCountries
       ? [
           new GeoJsonLayer({

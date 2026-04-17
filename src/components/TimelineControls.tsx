@@ -11,11 +11,17 @@ interface TimelineControlsProps {
   playbackSpeed: number
   direction: PlayDirection
   showCountries: boolean
+  showGraticule: boolean
+  showClimateBands: boolean
+  showBoundaries: boolean
   onPlay: () => void
   onPause: () => void
   onSetAge: (age: number) => void
   onSetSpeed: (speed: number) => void
   onSetDirection: (dir: PlayDirection) => void
+  onToggleGraticule: () => void
+  onToggleClimateBands: () => void
+  onToggleBoundaries: () => void
   onToggleCountries: () => void
 }
 
@@ -25,11 +31,17 @@ export default function TimelineControls({
   playbackSpeed,
   direction,
   showCountries,
+  showGraticule,
+  showClimateBands,
+  showBoundaries,
   onPlay,
   onPause,
   onSetAge,
   onSetSpeed,
   onSetDirection,
+  onToggleGraticule,
+  onToggleClimateBands,
+  onToggleBoundaries,
   onToggleCountries,
 }: TimelineControlsProps) {
   return (
@@ -199,6 +211,60 @@ export default function TimelineControls({
         >
           {currentAge} Ma
         </span>
+
+        {/* Grid toggle */}
+        <button
+          onClick={onToggleGraticule}
+          style={{
+            background: showGraticule ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${showGraticule ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+            borderRadius: 6,
+            color: showGraticule ? '#eee' : '#666',
+            fontSize: 11,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+          title="Toggle latitude/longitude grid"
+        >
+          Grid
+        </button>
+
+        {/* Climate toggle */}
+        <button
+          onClick={onToggleClimateBands}
+          style={{
+            background: showClimateBands ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${showClimateBands ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+            borderRadius: 6,
+            color: showClimateBands ? '#eee' : '#666',
+            fontSize: 11,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+          title="Toggle latitude climate bands"
+        >
+          Climate
+        </button>
+
+        {/* Boundaries toggle */}
+        <button
+          onClick={onToggleBoundaries}
+          style={{
+            background: showBoundaries ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${showBoundaries ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+            borderRadius: 6,
+            color: showBoundaries ? '#eee' : '#666',
+            fontSize: 11,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+          title="Toggle plate boundaries (ridges, subduction, transforms)"
+        >
+          Boundaries
+        </button>
 
         {/* Countries ghost toggle */}
         <button
