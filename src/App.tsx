@@ -13,6 +13,7 @@ function App() {
   const { currentAge, isPlaying, playbackSpeed, direction, play, pause, setAge, setSpeed, setDirection } = useAnimation()
   const [showCountries, setShowCountries] = useState(true)
   const [showGraticule, setShowGraticule] = useState(true)
+  const [colorByPlate, setColorByPlate] = useState(true)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === '+' || e.key === '=') {
@@ -29,7 +30,7 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, background: '#000000', overflow: 'hidden' }}>
-      <Globe currentAge={currentAge} showCountries={showCountries} showGraticule={showGraticule} />
+      <Globe currentAge={currentAge} showCountries={showCountries} showGraticule={showGraticule} colorByPlate={colorByPlate} />
       <AgeLabel age={currentAge} />
       <NowPanel currentAge={currentAge} />
       <TimelineControls
@@ -46,6 +47,8 @@ function App() {
         showGraticule={showGraticule}
         onToggleGraticule={() => setShowGraticule((v) => !v)}
         onToggleCountries={() => setShowCountries((v) => !v)}
+        colorByPlate={colorByPlate}
+        onToggleColorByPlate={() => setColorByPlate((v) => !v)}
       />
     </div>
   )
