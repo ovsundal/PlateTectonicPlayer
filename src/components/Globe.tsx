@@ -6,6 +6,7 @@ import { GeoJsonLayer } from '@deck.gl/layers'
 import type { ViewStateChangeParameters } from '@deck.gl/core'
 import { usePlateData } from '../hooks/usePlateData'
 import { useBoundaryData } from '../hooks/useBoundaryData'
+import { buildGraticule } from '../utils/buildGraticule'
 
 const COUNTRIES_URL = '/data/ne_countries_110m.geojson'
 
@@ -30,25 +31,7 @@ const OCEAN_GEOJSON: GeoJSON.FeatureCollection = {
   ],
 }
 
-// Generate graticule GeoJSON at module level (30-degree grid)
-function buildGraticule(): GeoJSON.FeatureCollection {
-  const features: GeoJSON.Feature[] = []
-  for (let lat = -90; lat <= 90; lat += 30) {
-    const coords: [number, number][] = []
-    for (let lon = -180; lon <= 180; lon += 2) {
-      coords.push([lon, lat])
-    }
-    features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
-  }
-  for (let lon = -180; lon <= 180; lon += 30) {
-    const coords: [number, number][] = []
-    for (let lat = -90; lat <= 90; lat += 2) {
-      coords.push([lon, lat])
-    }
-    features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords }, properties: {} })
-  }
-  return { type: 'FeatureCollection', features }
-}
+// Graticule GeoJSON computed once at module level (30-degree grid)
 const GRATICULE_GEOJSON = buildGraticule()
 
 const CLIMATE_BANDS_GEOJSON: GeoJSON.FeatureCollection = {
@@ -73,7 +56,7 @@ interface GlobeProps {
 export default function Globe({ currentAge, showCountries, showGraticule, showClimateBands, showBoundaries }: GlobeProps) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE)
   const { data: plateData, loading, error } = usePlateData(currentAge)
-  const { data: boundaryData } = useBoundaryData(currentAge)
+  const { data: boundaryData, loading: boundaryLoading, error: boundaryError } = useBoundaryData(currentAge)
 
   const onViewStateChange = useCallback(({ viewState: vs }: ViewStateChangeParameters) => {
     setViewState(vs as typeof INITIAL_VIEW_STATE)
@@ -210,6 +193,42 @@ export default function Globe({ currentAge, showCountries, showGraticule, showCl
           }}
         >
           Error: {error}
+        </div>
+      )}
+      {showBoundaries && boundaryLoading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 102,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: '#fff',
+            background: 'rgba(0,0,0,0.6)',
+            padding: '6px 14px',
+            borderRadius: 6,
+            fontSize: 13,
+            pointerEvents: 'none',
+          }}
+        >
+          Loading plate boundaries…
+        </div>
+      )}
+      {showBoundaries && boundaryError && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 102,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: '#f88',
+            background: 'rgba(0,0,0,0.7)',
+            padding: '6px 14px',
+            borderRadius: 6,
+            fontSize: 13,
+            pointerEvents: 'none',
+          }}
+        >
+          Boundary error: {boundaryError}
         </div>
       )}
     </>

@@ -20,7 +20,7 @@ interface UseBoundaryDataResult {
   error: string | null
 }
 
-function snapToStep(age: number, step = 5): number {
+export function snapToStep(age: number, step = 5): number {
   return Math.round(age / step) * step
 }
 
