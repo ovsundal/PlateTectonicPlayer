@@ -19,6 +19,8 @@ interface TimelineControlsProps {
   onSetDirection: (dir: PlayDirection) => void
   onToggleGraticule: () => void
   onToggleCountries: () => void
+  colorByPlate: boolean
+  onToggleColorByPlate: () => void
 }
 
 export default function TimelineControls({
@@ -35,6 +37,8 @@ export default function TimelineControls({
   onSetDirection,
   onToggleGraticule,
   onToggleCountries,
+  colorByPlate,
+  onToggleColorByPlate,
 }: TimelineControlsProps) {
   return (
     <div
@@ -238,6 +242,24 @@ export default function TimelineControls({
           title="Toggle modern country borders overlay"
         >
           Today's borders
+        </button>
+
+        {/* Plate coloring toggle */}
+        <button
+          onClick={onToggleColorByPlate}
+          style={{
+            background: colorByPlate ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${colorByPlate ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
+            borderRadius: 6,
+            color: colorByPlate ? '#eee' : '#666',
+            fontSize: 11,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+          title="Toggle plate coloring by plate ID"
+        >
+          Plate colors
         </button>
 
         {/* Speed buttons */}

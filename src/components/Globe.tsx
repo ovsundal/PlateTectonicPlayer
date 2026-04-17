@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type * as GeoJSON from 'geojson'
 import DeckGL from '@deck.gl/react'
 import { _GlobeView as GlobeView } from '@deck.gl/core'
@@ -6,6 +6,7 @@ import { GeoJsonLayer } from '@deck.gl/layers'
 import type { ViewStateChangeParameters } from '@deck.gl/core'
 import { usePlateData } from '../hooks/usePlateData'
 import { buildGraticule } from '../utils/buildGraticule'
+import { getAnchoredColor, buildReference, isReferenceReady } from '../utils/plateColors'
 
 const COUNTRIES_URL = `${import.meta.env.BASE_URL}data/ne_countries_110m.geojson`
 
@@ -33,15 +34,43 @@ const OCEAN_GEOJSON: GeoJSON.FeatureCollection = {
 // Graticule GeoJSON computed once at module level (30-degree grid)
 const GRATICULE_GEOJSON = buildGraticule()
 
+// Eagerly load 0 Ma data to build the reference color map
+;(async function loadReference() {
+  if (isReferenceReady()) return
+  try {
+    const url = `${import.meta.env.BASE_URL}data/muller/plates_0Ma.json`
+    const res = await fetch(url)
+    if (!res.ok) return
+    const data = await res.json()
+    buildReference(data.features)
+  } catch {
+    // Will fallback to centroid-based coloring
+  }
+})()
+
 interface GlobeProps {
   currentAge: number
   showCountries: boolean
   showGraticule: boolean
+  colorByPlate: boolean
 }
 
-export default function Globe({ currentAge, showCountries, showGraticule }: GlobeProps) {
+export default function Globe({ currentAge, showCountries, showGraticule, colorByPlate }: GlobeProps) {
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE)
   const { data: plateData, loading, error } = usePlateData(currentAge)
+  const [refReady, setRefReady] = useState(isReferenceReady())
+
+  // Check if reference is ready (built from 0 Ma data)
+  useEffect(() => {
+    if (refReady) return
+    const interval = setInterval(() => {
+      if (isReferenceReady()) {
+        setRefReady(true)
+        clearInterval(interval)
+      }
+    }, 200)
+    return () => clearInterval(interval)
+  }, [refReady])
 
   const onViewStateChange = useCallback(({ viewState: vs }: ViewStateChangeParameters) => {
     setViewState(vs as typeof INITIAL_VIEW_STATE)
@@ -64,9 +93,12 @@ export default function Globe({ currentAge, showCountries, showGraticule }: Glob
             data: plateData as unknown as GeoJSON.FeatureCollection,
             stroked: true,
             filled: true,
-            getFillColor: [139, 115, 85, 255],
+            getFillColor: colorByPlate
+              ? (f: GeoJSON.Feature) => getAnchoredColor(f)
+              : [139, 115, 85, 255],
             getLineColor: [180, 150, 100, 255],
             lineWidthMinPixels: 1,
+            updateTriggers: { getFillColor: [colorByPlate, refReady] },
           }),
         ]
       : []),
