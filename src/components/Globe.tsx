@@ -67,7 +67,7 @@ export default function Globe({ currentAge, showCountries, showGraticule, colorB
             stroked: true,
             filled: true,
             getFillColor: colorByPlate
-              ? (f: GeoJSON.Feature) => getPlateColor((f.properties as { PLATEID1?: number })?.PLATEID1 ?? 0)
+              ? (_f: GeoJSON.Feature, { index }: { index: number }) => getPlateColor(index)
               : [139, 115, 85, 255],
             getLineColor: [180, 150, 100, 255],
             lineWidthMinPixels: 1,

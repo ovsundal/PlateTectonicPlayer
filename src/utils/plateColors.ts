@@ -1,31 +1,39 @@
 /**
- * Deterministic PLATEID1 → RGBA color mapping for tectonic plate visualization.
- * 24 perceptually distinct hues, evenly spaced in HSL, pre-computed as RGBA tuples.
+ * Deterministic feature-index → RGBA color mapping for tectonic plate visualization.
+ * Uses a curated palette of 12 distinct earth-tone and muted colors that look good
+ * on a dark ocean background. Each polygon gets a color by index modulo palette size.
  */
 
-function hslToRgba(h: number, s: number, l: number): [number, number, number, number] {
-  const c = (1 - Math.abs(2 * l - 1)) * s
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = l - c / 2
-  let r = 0, g = 0, b = 0
-  if (h < 60) { r = c; g = x }
-  else if (h < 120) { r = x; g = c }
-  else if (h < 180) { g = c; b = x }
-  else if (h < 240) { g = x; b = c }
-  else if (h < 300) { r = x; b = c }
-  else { r = c; b = x }
-  return [
-    Math.round((r + m) * 255),
-    Math.round((g + m) * 255),
-    Math.round((b + m) * 255),
-    255,
-  ]
-}
+export const PLATE_PALETTE: [number, number, number, number][] = [
+  [180, 140, 100, 255],  // tan
+  [120, 160, 90, 255],   // olive green
+  [200, 120, 80, 255],   // terracotta
+  [100, 150, 160, 255],  // teal
+  [190, 170, 110, 255],  // khaki
+  [150, 100, 130, 255],  // mauve
+  [160, 180, 120, 255],  // sage
+  [210, 150, 120, 255],  // peach
+  [130, 130, 170, 255],  // lavender
+  [170, 130, 80, 255],   // bronze
+  [110, 170, 140, 255],  // seafoam
+  [190, 110, 110, 255],  // dusty rose
+]
 
-const PLATE_PALETTE: [number, number, number, number][] = Array.from({ length: 24 }, (_, i) =>
-  hslToRgba(i * 15, 0.6, 0.5),
-)
+export const PLATE_PALETTE_NAMES: string[] = [
+  'Tan',
+  'Olive',
+  'Terracotta',
+  'Teal',
+  'Khaki',
+  'Mauve',
+  'Sage',
+  'Peach',
+  'Lavender',
+  'Bronze',
+  'Seafoam',
+  'Rose',
+]
 
-export function getPlateColor(plateId: number): [number, number, number, number] {
-  return PLATE_PALETTE[Math.abs(plateId) % PLATE_PALETTE.length]
+export function getPlateColor(featureIndex: number): [number, number, number, number] {
+  return PLATE_PALETTE[Math.abs(featureIndex) % PLATE_PALETTE.length]
 }

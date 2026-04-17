@@ -3,6 +3,7 @@ import Globe from './components/Globe'
 import AgeLabel from './components/AgeLabel'
 import TimelineControls from './components/TimelineControls'
 import NowPanel from './components/NowPanel'
+import PlateLegend from './components/PlateLegend'
 import { useAnimation } from './hooks/useAnimation'
 
 const STEP_MA = 5
@@ -31,6 +32,7 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, background: '#000000', overflow: 'hidden' }}>
       <Globe currentAge={currentAge} showCountries={showCountries} showGraticule={showGraticule} colorByPlate={colorByPlate} />
+      <PlateLegend visible={colorByPlate} />
       <AgeLabel age={currentAge} />
       <NowPanel currentAge={currentAge} />
       <TimelineControls
