@@ -25,17 +25,17 @@ interface UseAnimationResult {
 }
 
 export function useAnimation(): UseAnimationResult {
-  const [currentAge, setCurrentAge] = useState<number>(MIN_AGE)
+  const [currentAge, setCurrentAge] = useState<number>(MAX_AGE)
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1)
-  const [direction, setDirectionState] = useState<PlayDirection>('rev')
+  const [direction, setDirectionState] = useState<PlayDirection>('fwd')
 
   const rafRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number | null>(null)
-  const ageRef = useRef<number>(MIN_AGE)
+  const ageRef = useRef<number>(MAX_AGE)
   const speedRef = useRef<number>(1)
   const playingRef = useRef<boolean>(false)
-  const directionRef = useRef<PlayDirection>('rev')
+  const directionRef = useRef<PlayDirection>('fwd')
 
   // Keep refs in sync with state
   useEffect(() => { ageRef.current = currentAge }, [currentAge])

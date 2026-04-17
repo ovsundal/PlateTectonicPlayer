@@ -1,20 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Globe from './components/Globe'
 import AgeLabel from './components/AgeLabel'
 import TimelineControls from './components/TimelineControls'
 import NowPanel from './components/NowPanel'
 import { useAnimation } from './hooks/useAnimation'
 
+const STEP_MA = 5
+const MAX_AGE = 750
+const MIN_AGE = 0
+
 function App() {
   const { currentAge, isPlaying, playbackSpeed, direction, play, pause, setAge, setSpeed, setDirection } = useAnimation()
   const [showCountries, setShowCountries] = useState(true)
   const [showGraticule, setShowGraticule] = useState(true)
-  const [showClimateBands, setShowClimateBands] = useState(false)
-  const [showBoundaries, setShowBoundaries] = useState(true)
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === '+' || e.key === '=') {
+      setAge(Math.min(currentAge + STEP_MA, MAX_AGE))
+    } else if (e.key === '-' || e.key === '_') {
+      setAge(Math.max(currentAge - STEP_MA, MIN_AGE))
+    }
+  }, [currentAge, setAge])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   return (
     <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, background: '#000000', overflow: 'hidden' }}>
-      <Globe currentAge={currentAge} showCountries={showCountries} showGraticule={showGraticule} showClimateBands={showClimateBands} showBoundaries={showBoundaries} />
+      <Globe currentAge={currentAge} showCountries={showCountries} showGraticule={showGraticule} />
       <AgeLabel age={currentAge} />
       <NowPanel currentAge={currentAge} />
       <TimelineControls
@@ -29,11 +44,7 @@ function App() {
         onSetSpeed={setSpeed}
         onSetDirection={setDirection}
         showGraticule={showGraticule}
-        showClimateBands={showClimateBands}
-        showBoundaries={showBoundaries}
         onToggleGraticule={() => setShowGraticule((v) => !v)}
-        onToggleClimateBands={() => setShowClimateBands((v) => !v)}
-        onToggleBoundaries={() => setShowBoundaries((v) => !v)}
         onToggleCountries={() => setShowCountries((v) => !v)}
       />
     </div>
