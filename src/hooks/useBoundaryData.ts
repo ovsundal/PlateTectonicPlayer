@@ -3,16 +3,8 @@ import type { BoundaryCollection } from '../types/plates'
 
 const cache = new Map<number, BoundaryCollection>()
 
-const ALL_AGES: number[] = Array.from({ length: 151 }, (_, i) => i * 5)
-;(function prefetchAll() {
-  for (const ma of ALL_AGES) {
-    if (cache.has(ma)) continue
-    fetch(`/data/muller/boundaries_${ma}Ma.json`)
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((json: BoundaryCollection) => { cache.set(ma, json) })
-      .catch(() => { /* silently skip — will retry on demand */ })
-  }
-})()
+/** Ages for which boundary files are known NOT to exist (404). */
+const missing = new Set<number>()
 
 interface UseBoundaryDataResult {
   data: BoundaryCollection | null
@@ -40,6 +32,13 @@ export function useBoundaryData(timeMa: number): UseBoundaryDataResult {
       return
     }
 
+    if (missing.has(snappedTime)) {
+      setData(null)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -51,10 +50,17 @@ export function useBoundaryData(timeMa: number): UseBoundaryDataResult {
 
     fetch(url, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`)
+        const ct = res.headers.get('content-type') ?? ''
+        if (!res.ok || !ct.includes('application/json')) {
+          missing.add(snappedTime)
+          setData(null)
+          setLoading(false)
+          return
+        }
         return res.json() as Promise<BoundaryCollection>
       })
       .then((json) => {
+        if (!json) return
         cache.set(snappedTime, json)
         setData(json)
         setLoading(false)
