@@ -13,15 +13,15 @@ interface Region {
 }
 
 const REGIONS: Region[] = [
-  { name: 'North America',  color: [180, 140, 100, 255], lonMin: -170, lonMax: -50,  latMin: 15,  latMax: 85 },
-  { name: 'South America',  color: [120, 170, 90, 255],  lonMin: -90,  lonMax: -30,  latMin: -60, latMax: 15 },
-  { name: 'Europe',         color: [130, 130, 180, 255], lonMin: -15,  lonMax: 45,   latMin: 35,  latMax: 75 },
-  { name: 'Africa',         color: [210, 150, 100, 255], lonMin: -20,  lonMax: 55,   latMin: -40, latMax: 35 },
-  { name: 'Central Asia',   color: [170, 130, 80, 255],  lonMin: 45,   lonMax: 100,  latMin: 25,  latMax: 75 },
-  { name: 'East Asia',      color: [190, 110, 110, 255], lonMin: 100,  lonMax: 150,  latMin: 10,  latMax: 75 },
-  { name: 'South Asia',     color: [200, 170, 110, 255], lonMin: 60,   lonMax: 100,  latMin: -10, latMax: 35 },
+  { name: 'North America',  color: [90, 160, 200, 255],  lonMin: -170, lonMax: -50,  latMin: 15,  latMax: 85 },
+  { name: 'South America',  color: [120, 180, 80, 255],  lonMin: -90,  lonMax: -30,  latMin: -60, latMax: 15 },
+  { name: 'Europe',         color: [140, 120, 190, 255], lonMin: -15,  lonMax: 45,   latMin: 35,  latMax: 75 },
+  { name: 'Africa',         color: [220, 170, 60, 255],  lonMin: -20,  lonMax: 55,   latMin: -40, latMax: 35 },
+  { name: 'Central Asia',   color: [200, 100, 100, 255], lonMin: 45,   lonMax: 100,  latMin: 25,  latMax: 75 },
+  { name: 'East Asia',      color: [190, 110, 160, 255], lonMin: 100,  lonMax: 150,  latMin: 10,  latMax: 75 },
+  { name: 'South Asia',     color: [80, 190, 160, 255],  lonMin: 60,   lonMax: 100,  latMin: -10, latMax: 35 },
   { name: 'Southeast Asia', color: [160, 180, 120, 255], lonMin: 95,   lonMax: 155,  latMin: -15, latMax: 25 },
-  { name: 'Australia',      color: [190, 120, 70, 255],  lonMin: 110,  lonMax: 180,  latMin: -50, latMax: -10 },
+  { name: 'Australia',      color: [210, 140, 70, 255],  lonMin: 110,  lonMax: 180,  latMin: -50, latMax: -10 },
   { name: 'Antarctica',     color: [200, 220, 240, 255], lonMin: -180, lonMax: 180,  latMin: -90, latMax: -60 },
   { name: 'Arctic',         color: [180, 210, 230, 255], lonMin: -180, lonMax: 180,  latMin: 70,  latMax: 90 },
   { name: 'Pacific Islands',color: [100, 160, 160, 255], lonMin: 150,  lonMax: 180,  latMin: -50, latMax: 30 },
