@@ -1,34 +1,57 @@
 import { describe, it, expect } from 'vitest'
-import { getRegionColor, REGION_LEGEND } from './plateColors'
+import { getAnchoredColor, getRegionColorFromCentroid, buildReference, REGION_LEGEND, computeCentroid } from './plateColors'
 
-describe('getRegionColor', () => {
-  it('returns an RGBA tuple with 4 elements', () => {
-    const feature = makeFeature([[10, 50], [11, 50], [11, 51], [10, 51], [10, 50]])
-    const color = getRegionColor(feature)
+function makeFeature(coords: number[][]): GeoJSON.Feature {
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [coords] },
+    properties: {},
+  }
+}
+
+describe('getRegionColorFromCentroid', () => {
+  it('returns Europe color for European coordinates', () => {
+    const europeColor = REGION_LEGEND.find(r => r.name === 'Europe')!.color
+    expect(getRegionColorFromCentroid(15, 50)).toEqual(europeColor)
+  })
+
+  it('returns Africa color for African coordinates', () => {
+    const africaColor = REGION_LEGEND.find(r => r.name === 'Africa')!.color
+    expect(getRegionColorFromCentroid(25, 5)).toEqual(africaColor)
+  })
+})
+
+describe('computeCentroid', () => {
+  it('computes centroid of a simple polygon', () => {
+    const [lon, lat] = computeCentroid({
+      type: 'Polygon',
+      coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]],
+    })
+    expect(lon).toBeCloseTo(4) // average of 0,10,10,0,0
+    expect(lat).toBeCloseTo(4)
+  })
+})
+
+describe('getAnchoredColor', () => {
+  it('returns a color without reference (fallback)', () => {
+    const feature = makeFeature([[10, 50], [20, 50], [20, 55], [10, 55], [10, 50]])
+    const color = getAnchoredColor(feature)
     expect(color).toHaveLength(4)
     expect(color[3]).toBe(255)
   })
 
-  it('returns Europe color for polygon centered in Europe', () => {
-    const feature = makeFeature([[10, 50], [20, 50], [20, 55], [10, 55], [10, 50]])
-    const color = getRegionColor(feature)
+  it('uses reference colors after buildReference', () => {
+    const refFeatures = [
+      makeFeature([[10, 50], [20, 50], [20, 55], [10, 55], [10, 50]]), // Europe
+      makeFeature([[25, 0], [35, 0], [35, 10], [25, 10], [25, 0]]),   // Africa
+    ]
+    buildReference(refFeatures)
+
+    // A polygon near the Europe reference should get Europe's color
+    const europeFeature = makeFeature([[12, 51], [18, 51], [18, 54], [12, 54], [12, 51]])
+    const color = getAnchoredColor(europeFeature)
     const europeColor = REGION_LEGEND.find(r => r.name === 'Europe')!.color
     expect(color).toEqual(europeColor)
-  })
-
-  it('returns Africa color for polygon centered in Africa', () => {
-    const feature = makeFeature([[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]])
-    const color = getRegionColor(feature)
-    const africaColor = REGION_LEGEND.find(r => r.name === 'Africa')!.color
-    expect(color).toEqual(africaColor)
-  })
-
-  it('returns a default color for polygons outside defined regions', () => {
-    // Middle of Pacific
-    const feature = makeFeature([[-160, 0], [-150, 0], [-150, 5], [-160, 5], [-160, 0]])
-    const color = getRegionColor(feature)
-    expect(color).toHaveLength(4)
-    expect(color[3]).toBe(255)
   })
 })
 
@@ -41,11 +64,3 @@ describe('REGION_LEGEND', () => {
     }
   })
 })
-
-function makeFeature(coords: number[][]): GeoJSON.Feature {
-  return {
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [coords] },
-    properties: {},
-  }
-}
