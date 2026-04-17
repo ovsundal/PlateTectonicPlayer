@@ -46,7 +46,7 @@ export function useBoundaryData(timeMa: number): UseBoundaryDataResult {
     setLoading(true)
     setError(null)
 
-    const url = `/data/muller/boundaries_${snappedTime}Ma.json`
+    const url = `${import.meta.env.BASE_URL}data/muller/boundaries_${snappedTime}Ma.json`
 
     fetch(url, { signal: controller.signal })
       .then((res) => {

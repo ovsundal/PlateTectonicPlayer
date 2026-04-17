@@ -8,7 +8,7 @@ import { usePlateData } from '../hooks/usePlateData'
 import { useBoundaryData } from '../hooks/useBoundaryData'
 import { buildGraticule } from '../utils/buildGraticule'
 
-const COUNTRIES_URL = '/data/ne_countries_110m.geojson'
+const COUNTRIES_URL = `${import.meta.env.BASE_URL}data/ne_countries_110m.geojson`
 
 const INITIAL_VIEW_STATE = {
   longitude: 0,

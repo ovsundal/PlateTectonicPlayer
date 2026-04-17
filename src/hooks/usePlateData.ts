@@ -3,12 +3,18 @@ import type { PlatePolygonCollection } from '../types/plates'
 
 const cache = new Map<number, PlatePolygonCollection>()
 
-const GPLATES_API = 'https://gws.gplates.org/reconstruct/coastlines'
-const MODEL = 'MULLER2022'
-
-function plateUrl(ma: number): string {
-  return `${GPLATES_API}?time=${ma}&model=${MODEL}`
-}
+// Eagerly prefetch all timesteps in the background so the animation never stalls.
+// Runs once at module load; individual files are skipped once cached.
+const ALL_AGES: number[] = Array.from({ length: 151 }, (_, i) => i * 5)
+;(function prefetchAll() {
+  for (const ma of ALL_AGES) {
+    if (cache.has(ma)) continue
+    fetch(`${import.meta.env.BASE_URL}data/muller/plates_${ma}Ma.json`)
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((json: PlatePolygonCollection) => { cache.set(ma, json) })
+      .catch(() => { /* silently skip — will retry on demand */ })
+  }
+})()
 
 interface UsePlateDataResult {
   data: PlatePolygonCollection | null
@@ -43,11 +49,11 @@ export function usePlateData(timeMa: number): UsePlateDataResult {
     setLoading(true)
     setError(null)
 
-    const url = plateUrl(snappedTime)
+    const url = `${import.meta.env.BASE_URL}data/muller/plates_${snappedTime}Ma.json`
 
     fetch(url, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error(`GPlates API error: ${res.status}`)
+        if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`)
         return res.json() as Promise<PlatePolygonCollection>
       })
       .then((json) => {
